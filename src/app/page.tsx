@@ -1,13 +1,22 @@
 'use client';
 import { useState } from 'react';
-import { Box, Typography, Card, CardContent, Stack, 
-         Select, MenuItem, FormControl, InputLabel } from '@mui/material';
+import {
+  Box, Typography, Card, CardContent, Stack,
+  Select, MenuItem, FormControl, InputLabel
+} from '@mui/material';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
-import { datasets } from '@/data/index';
+
+// sample data
+import birds from '../../data/bird_population.json';
+import fish from '../../data/fish.json';
+import planets from '../../data/planets.json';
+
+import { DataFile } from '@/types/data';
 
 export default function Home() {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const { title, description, items } = datasets[selectedIndex].data;
+  const datasets: DataFile[] = [birds, fish, planets]
+  const { title, description, items } = datasets[selectedIndex];
 
   return (
     <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4, px: 2 }}>
@@ -21,11 +30,11 @@ export default function Home() {
           onChange={(e) => setSelectedIndex(Number(e.target.value))}
         >
           {datasets.map((ds, i) => (
-            <MenuItem key={i} value={i}>{ds.label}</MenuItem>
+            <MenuItem key={i} value={i}>{ds.title}</MenuItem>
           ))}
         </Select>
       </FormControl>
-      
+
       {/* Title & description from the JSON */}
       <Typography variant="h4" gutterBottom>{title}</Typography>
       <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>        {description}
