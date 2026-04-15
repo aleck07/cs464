@@ -1,36 +1,49 @@
-import path from 'path'
-import fs from 'fs/promises'
-import { DataFile } from '@/types/data'
+import { supabase } from '@/lib/supabase'
+import { DataFile, DataItem } from '@/types/data'
 
+type ItemRow = { name: string; order_index: number }
+type DatasetRow = { name: string; title: string; description: string; dataset_items: ItemRow[] }
 
-const dataDirectory = path.join(process.cwd(), "data")
+function toDataFile(row: DatasetRow): DataFile {
+    return {
+        title: row.title,
+        description: row.description,
+        items: row.dataset_items
+            .sort((a, b) => a.order_index - b.order_index)
+            .map((item): DataItem => ({ name: item.name, order: item.order_index })),
+    }
+}
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const name = searchParams.get('name')
 
-    // query param containing name -> return specified file
     if (name) {
-        const filePath = path.join(dataDirectory, `${name}.json`)
-        try {
-            const content = await fs.readFile(filePath, 'utf-8')
-            return Response.json(JSON.parse(content))
-        } catch {
+        const { data, error } = await supabase
+            .from('datasets')
+            .select('name, title, description, dataset_items(name, order_index)')
+            .eq('name', name)
+            .single()
+
+        if (error || !data) {
             return Response.json({ error: `No dataset found for ${name}` }, { status: 404 })
         }
-    } 
 
-    // no query param
-
-    // get files
-    const files = (await fs.readdir(dataDirectory)).filter(f => f.endsWith('.json'))
-    const allData: Record<string, DataFile> = {}
-
-    // iterate through json files in dataDirectory 
-    for (const file of files){
-        const filePath = path.join(dataDirectory, file)
-        const content = await fs.readFile(filePath, 'utf-8')
-        allData[file.replace('.json', '')] = JSON.parse(content)
+        return Response.json(toDataFile(data as DatasetRow))
     }
-    return Response.json({datasets: allData})
+
+    const { data, error } = await supabase
+        .from('datasets')
+        .select('name, title, description, dataset_items(name, order_index)')
+
+    if (error || !data) {
+        return Response.json({ error: 'Failed to fetch datasets' }, { status: 500 })
+    }
+
+    const allData: Record<string, DataFile> = {}
+    for (const row of data as DatasetRow[]) {
+        allData[row.name] = toDataFile(row)
+    }
+
+    return Response.json({ datasets: allData })
 }
