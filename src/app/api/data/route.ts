@@ -4,6 +4,7 @@ import { DataFile, DataItem } from '@/types/data'
 type ItemRow = { name: string; order_index: number }
 type DatasetRow = { name: string; title: string; description: string; dataset_items: ItemRow[] }
 
+// convert a dataset row into a DataFile object
 function toDataFile(row: DatasetRow): DataFile {
     return {
         title: row.title,
@@ -18,6 +19,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const name = searchParams.get('name')
 
+    // check if dataset is in database.
     if (name) {
         const { data, error } = await supabase
             .from('datasets')
@@ -32,6 +34,7 @@ export async function GET(request: Request) {
         return Response.json(toDataFile(data as DatasetRow))
     }
 
+    // error checking 
     const { data, error } = await supabase
         .from('datasets')
         .select('name, title, description, dataset_items(name, order_index)')
@@ -40,6 +43,7 @@ export async function GET(request: Request) {
         return Response.json({ error: 'Failed to fetch datasets' }, { status: 500 })
     }
 
+    //append all datasets into a single object
     const allData: Record<string, DataFile> = {}
     for (const row of data as DatasetRow[]) {
         allData[row.name] = toDataFile(row)
