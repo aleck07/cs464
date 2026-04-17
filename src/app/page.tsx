@@ -12,14 +12,15 @@ import birds from '../../data/bird_population.json';
 import fish from '../../data/fish.json';
 import planets from '../../data/planets.json';
 
-import { DatasetResponse, DatasetItem } from '@/types/data';
+import { Dataset, DatasetItem } from '@/types/data';
 
 export default function Home() {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const datasets: DatasetResponse[] = [birds, fish, planets]
+  const datasets: Dataset[] = [birds, fish, planets]
   const { title, description, items } = datasets[selectedIndex];
 
   const [shuffledItems, setShuffledItems] = useState<DatasetItem[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const shuffled = [...items].sort(() => Math.random() - 0.5);
@@ -62,10 +63,12 @@ export default function Home() {
             value={item}
             as="div"
             style={{ position: 'relative' }}
+            onDragStart={() => setIsDragging(true)}
+            onDragEnd={() => setIsDragging(false)}
           >
-            <Card variant="outlined">
+            <Card variant="outlined" sx={{ cursor: isDragging ? 'grabbing' : 'grab' }}>
               <CardContent sx={{ display: 'flex', alignItems: 'center', gap: 2, py: '12px !important' }}>
-                <DragHandleIcon color="action" />
+                <DragHandleIcon color="action"/>
                 <Typography variant="body1">{item.name}</Typography>
               </CardContent>
             </Card>
