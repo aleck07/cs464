@@ -9,6 +9,12 @@ import DragHandleIcon from '@mui/icons-material/DragHandle';
 import { Reorder } from 'motion/react';
 
 import { Dataset, DatasetItem, DatasetMeta } from '@/types/data';
+import {
+  statusColors,
+  getItemStatus,
+  shuffleItems,
+  countCorrectItems,
+} from '@/utils/puzzle';
 
 export default function Home() {
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -23,21 +29,6 @@ export default function Home() {
     message: string
   } | null>(null);
 
-  const statusColors = {
-    correct: '#e6f4ea',
-    close: '#fff9e6',
-    wrong: '#f0f0f0',
-    default: 'white',
-  };
-
-  const getItemStatus = (item: DatasetItem, index: number) => {
-    if (!feedback) return 'default';
-    const diff = Math.abs(item.order - (index + 1));
-    if (diff === 0) return 'correct';
-    if (diff <= 2) return 'close';
-    return 'wrong';
-  };
-
   useEffect(() => {
     fetch("/api/titles")
       .then((r: Response) => r.json())
@@ -46,8 +37,7 @@ export default function Home() {
 
   useEffect(() => {
     if (dataset) {
-      const shuffled = [...dataset.items].sort(() => Math.random() - 0.5);
-      setShuffledItems(shuffled);
+      setShuffledItems(shuffleItems(dataset.items));
       setFeedback(null);
     }
 
@@ -64,9 +54,7 @@ export default function Home() {
 
   const handleCheckOrder = () => {
     if (dataset) {
-      const correctCount = shuffledItems.reduce((count, item, index) => {
-        return item.name === dataset.items[index].name ? count + 1 : count;
-      }, 0);
+      const correctCount = countCorrectItems(shuffledItems, dataset.items);
 
       if (correctCount === dataset.items.length) {
         setFeedback({
@@ -151,7 +139,7 @@ export default function Home() {
               variant="outlined"
               sx={{
                 cursor: isDragging ? 'grabbing' : 'grab',
-                backgroundColor: statusColors[getItemStatus(item, shuffledItems.indexOf(item))],
+                backgroundColor: statusColors[getItemStatus(item, shuffledItems.indexOf(item), feedback !== null)],
                 transition: 'background-color 0.3s ease',
               }}
             >
