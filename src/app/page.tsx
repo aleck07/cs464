@@ -1,14 +1,16 @@
 'use client';
 import { useState, useEffect } from 'react';
 import {
-  Box, Typography, Card, CardContent,
-  Select, MenuItem, FormControl, InputLabel,
-  Button, Alert
+  Box, Card, CardContent,
+  Typography, Button
 } from '@mui/material';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
 import { Reorder } from 'motion/react';
 
 import { Dataset, DatasetItem, DatasetMeta } from '@/types/data';
+import DatasetSelector from '@/components/DatasetSelector';
+import DatasetHeader from '@/components/DatasetHeader';
+import FeedbackBox from '@/components/FeedbackBox';
 import {
   statusColors,
   getItemStatus,
@@ -77,47 +79,19 @@ export default function Home() {
 
   return (
     <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4, px: 2 }}>
-
-      {/* Dropdown */}
-      <FormControl fullWidth sx={{ mb: 3 }}>
-        <InputLabel>Select a dataset</InputLabel>
-        <Select
-          value={selectedIndex}
-          label="Select a dataset"
-          onChange={(e) => setSelectedIndex(Number(e.target.value))}
-        >
-          {datasetMeta.map((ds, i) => (
-            <MenuItem key={i} value={i}>{ds.title}</MenuItem>
-          ))}
-        </Select>
-      </FormControl>
+      <DatasetSelector
+        selectedIndex={selectedIndex}
+        datasetMeta={datasetMeta}
+        onChange={setSelectedIndex}
+      />
 
       <Button variant="contained" onClick={handleCheckOrder} sx={{ mb: 2 }}>
         Check Order
       </Button>
 
-      <Box sx={{ minHeight: 48, mb: 3 }}>
-        {feedback && (
-          <Alert severity={feedback.severity}>
-            {feedback.message}
-          </Alert>
-        )}
-      </Box>
+      <FeedbackBox feedback={feedback} />
 
-      {/* Title & description from the JSON */}
-      {
-        dataset ?
-          <>
-            <Typography variant="h4" gutterBottom>{dataset.title}</Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-              {dataset.description}
-            </Typography>
-          </>
-
-          :
-          <h3> loading... </h3>
-      }
-
+      <DatasetHeader dataset={dataset} />
 
       {/* Item cards */}
       <Reorder.Group
