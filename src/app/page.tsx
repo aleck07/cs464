@@ -1,29 +1,28 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Box, Button } from '@mui/material';
+import {
+  Box, Button
+} from '@mui/material';
+
 import { Dataset, DatasetItem, DatasetMeta } from '@/types/data';
-import DatasetPicker from '@/components/DatasetPicker';
-import FeedbackAlert from '@/components/FeedbackAlert';
+import DatasetSelector from '@/components/DatasetSelector';
 import DatasetHeader from '@/components/DatasetHeader';
-import DraggableDatasetItems from '@/components/DraggableDatasetItems';
+import FeedbackBox from '@/components/FeedbackBox';
+import SortableItemList from '@/components/SortableItemList';
+import {
+  shuffleItems,
+  countCorrectItems,
+} from '@/utils/puzzle';
 
 export default function Home() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [dataset, setDataset] = useState<Dataset | null>(null);
   const [shuffledItems, setShuffledItems] = useState<DatasetItem[]>([]);
-  const [datasetMeta, setDatasetMeta] = useState<DatasetMeta[]>([]);
+  const [datasetMeta, setDatasetMeta] = useState<DatasetMeta[]>([])
   const [feedback, setFeedback] = useState<{
     severity: 'success' | 'info';
     message: string;
   } | null>(null);
-
-  const getItemStatus = (item: DatasetItem, index: number) => {
-    if (!feedback) return 'default';
-    const diff = Math.abs(item.order - (index + 1));
-    if (diff === 0) return 'correct';
-    if (diff <= 2) return 'close';
-    return 'wrong';
-  };
 
   useEffect(() => {
     fetch('/api/titles')
@@ -33,8 +32,7 @@ export default function Home() {
 
   useEffect(() => {
     if (dataset) {
-      const shuffled = [...dataset.items].sort(() => Math.random() - 0.5);
-      setShuffledItems(shuffled);
+      setShuffledItems(shuffleItems(dataset.items));
       setFeedback(null);
     }
   }, [dataset]);
@@ -49,9 +47,7 @@ export default function Home() {
 
   const handleCheckOrder = () => {
     if (dataset) {
-      const correctCount = shuffledItems.reduce((count, item, index) => {
-        return item.name === dataset.items[index].name ? count + 1 : count;
-      }, 0);
+      const correctCount = countCorrectItems(shuffledItems, dataset.items);
 
       if (correctCount === dataset.items.length) {
         setFeedback({
@@ -74,22 +70,24 @@ export default function Home() {
 
   return (
     <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4, px: 2 }}>
-      <DatasetPicker
+      <DatasetSelector
         selectedIndex={selectedIndex}
         datasetMeta={datasetMeta}
-        onSelect={setSelectedIndex}
+        onChange={setSelectedIndex}
       />
 
       <Button variant="contained" onClick={handleCheckOrder} sx={{ mb: 2 }}>
         Check Order
       </Button>
 
-      <FeedbackAlert feedback={feedback} />
+      <FeedbackBox feedback={feedback} />
+
       <DatasetHeader dataset={dataset} />
-      <DraggableDatasetItems
-        shuffledItems={shuffledItems}
+
+      <SortableItemList
+        items={shuffledItems}
+        hasFeedback={feedback !== null}
         onReorder={handleReorder}
-        getItemStatus={getItemStatus}
       />
     </Box>
   );

@@ -1,9 +1,10 @@
 import { Typography } from '@mui/material';
+
 import { Dataset } from '@/types/data';
 
-interface DatasetHeaderProps {
+type DatasetHeaderProps = {
   dataset: Dataset | null;
-}
+};
 
 export default function DatasetHeader({ dataset }: DatasetHeaderProps) {
   if (!dataset) {
