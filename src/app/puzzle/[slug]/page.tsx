@@ -44,6 +44,8 @@ export default function PuzzlePage({ params }: { params: Promise<{ slug: string 
   if (notFound) return (
     <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4, px: 2, textAlign: 'center' }}>
       <Typography>Puzzle not found.</Typography>
+      <br />
+      <Button variant="contained" href="/">Go Home</Button>
     </Box>
   );
 
